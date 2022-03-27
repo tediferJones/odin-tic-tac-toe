@@ -9,18 +9,6 @@ class Game
     @board = (1..9).to_a
   end
 
-  def display2
-    @board.each do |item|
-      if [3, 6].include?(item)
-        print " #{item} \n-----------\n"
-      elsif item == 9
-        print " #{item} \n"
-      else
-        print " #{item} |"
-      end
-    end
-  end
-
   def display
     @board.each_index do |index|
       if [2, 5].include?(index)
@@ -42,23 +30,32 @@ class Game
     end
   end
 
-  def place_mark
-    # asks the user where they want their mark to go, then takes the value of that location and adds it to the player's
-    # spots_taken attribute, then places the players @marker at the given location and calls changes current_turn with switch_turns
-    puts 'Where would you like your mark to go? (Integer 1 - 9)'
-    location = gets.chomp.to_i
-    @current_turn.spots_taken << @board[location - 1]
-    @board[location - 1] = @current_turn.marker
-    self.switch_turns
-    self.display
+  def make_move(location_index)
+    if @board[location_index].is_a? Integer
+      @current_turn.spots_taken << @board[location_index]
+      @board[location_index] = @current_turn.marker
+    else
+      puts 'that spot is already taken, try again'
+      switch_turns
+    end
   end
 
-  def play
-    # maybe this should be its own class or function that initiates two players and then starts the game.
+  def take_turn
+    # asks the user where they want their mark to go, then takes the value of that location_index and adds it to the player's
+    # spots_taken attribute, then places the players @marker at the given location_index and calls changes current_turn with switch_turns
+    puts "It is #{@current_turn.name}'s turn, where would you like your #{@current_turn.marker} to go? (Integer 1 - 9)"
+    location_index = gets.chomp.to_i - 1
+    if location_index > -1 && location_index < 9
+      make_move(location_index)
+    else
+      puts "You chose poorly so we'll choose for you\n\n"
+      random_location_index = rand(9)
+      make_move(random_location_index)
+    end
   end
 end
 
-# Creates a player with attribute name and marker
+# Creates a player with attribute name, marker, and spots_taken
 class Player
   attr_reader :name, :marker, :spots_taken
 
@@ -90,7 +87,7 @@ class Player
 end
 
 # Single command should get the game started by creating two instances of player, and creating an instance of game with those players
-# it should call place_mark 9 times, checking for a winner after each turn.  If a winner is not determined after 9 turns, the game is a tie
+# it should call take_turn 9 times, checking for a winner after each turn.  If a winner is not determined after 9 turns, the game is a tie
 class Play
   def initialize
     @@turn_counter = 0
@@ -99,7 +96,9 @@ class Play
     new_game = Game.new(p1, p2)
 
     while @@turn_counter < 9
-      new_game.place_mark
+      new_game.display
+      new_game.take_turn
+      new_game.switch_turns
       @@turn_counter += 1
     end
     if @@turn_counter == 9
@@ -120,11 +119,3 @@ win_sets = [
 ]
 
 idk = Play.new
-
-#this_game = Game.new('ted', 'bed')
-#p1 = Player.new
-#p2 = Player.new
-#new_game = Game.new(p1, p2)
-#new_game.place_mark
-#new_game.display
-#p p1.spots_taken
