@@ -1,5 +1,4 @@
 
-
 # This is the game class
 class Game
   attr_reader :game_won, :current_turn
@@ -15,11 +14,11 @@ class Game
   def win_test(spots_taken)
     win_sets = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]]
     win_sets.each do |win_set|
-      idk = []
+      test_set = []
       win_set.each do |win_location|
-        idk << spots_taken.any?(win_location)
+        test_set << spots_taken.any?(win_location)
       end
-      @game_won = true if idk.all?
+      @game_won = true if test_set.all?
     end
   end
 
@@ -50,8 +49,9 @@ class Game
       @board[location_index] = @current_turn.marker
     else
       # find a way to call take_turn recursively so it doesnt run up the turn_counter of Class Play
-      puts 'that spot is already taken, try again'
-      switch_turns # calls switch_turns here so that after it is called later in Class Play, it is the same person's turn
+      display
+      puts "Sorry #{@current_turn.name} that spot is already taken, try again\n"
+      take_turn # calls take_turn recursively to prevent turn_counter in Class Play from incrementing based on an incorrect move
     end
   end
 
@@ -64,9 +64,10 @@ class Game
     if location_index > -1 && location_index < 9
       make_move(location_index)
     else
+      useable_locations = []
       puts "You chose poorly so we'll choose for you\n\n"
-      random_location_index = rand(9)
-      make_move(random_location_index)
+      @board.each { |location_value| useable_locations << location_value if location_value.is_a? Integer }
+      make_move(useable_locations.sample - 1)
     end
     win_test(@current_turn.spots_taken)
   end
@@ -82,7 +83,7 @@ class Player
     @spots_taken = []
     @winner = false
     puts 'Please Enter Your Name'
-    @name = gets.chomp
+    @name = gets.chomp.capitalize
     if @@taken.nil?
       puts 'Please Enter X or O for your marker'
       temp = gets.chomp.downcase
@@ -102,6 +103,10 @@ class Player
     end
     @@taken = @marker
   end
+
+  def set_marker
+
+  end
 end
 
 # Single command should get the game started by creating two instances of player, and creating an instance of game with
@@ -119,13 +124,24 @@ class Play
       new_game.take_turn
       new_game.switch_turns
       @@turn_counter += 1
+      #play_turn
     end
 
     if new_game.game_won == true
-      puts "THE WINNER IS #{new_game.current_turn.name}"
+      new_game.switch_turns
+      new_game.display
+      puts "THE WINNER IS #{new_game.current_turn.name.upcase}"
     elsif @@turn_counter == 9
       puts "IT WAS A TIE, YOU'RE BOTH SUCKERS"
     end
+    # Try adding replay function down here, make it call initialize again
+  end
+
+  def play_turn
+    new_game.display
+    new_game.take_turn
+    new_game.switch_turns
+    @@turn_counter += 1
   end
 end
 
