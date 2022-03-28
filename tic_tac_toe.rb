@@ -1,12 +1,26 @@
+
+
 # This is the game class
 class Game
-  attr_reader :player1
+  attr_reader :game_won, :current_turn
 
   def initialize(player1, player2)
     @player1 = player1
     @player2 = player2
     @current_turn = @player1
     @board = (1..9).to_a
+    @game_won = false
+  end
+
+  def win_test(spots_taken)
+    win_sets = [[1, 2, 3], [4, 5, 6], [7, 8, 9], [1, 4, 7], [2, 5, 8], [3, 6, 9], [1, 5, 9], [3, 5, 7]]
+    win_sets.each do |win_set|
+      idk = []
+      win_set.each do |win_location|
+        idk << spots_taken.any?(win_location)
+      end
+      @game_won = true if idk.all?
+    end
   end
 
   def display
@@ -35,14 +49,16 @@ class Game
       @current_turn.spots_taken << @board[location_index]
       @board[location_index] = @current_turn.marker
     else
+      # find a way to call take_turn recursively so it doesnt run up the turn_counter of Class Play
       puts 'that spot is already taken, try again'
-      switch_turns
+      switch_turns # calls switch_turns here so that after it is called later in Class Play, it is the same person's turn
     end
   end
 
   def take_turn
-    # asks the user where they want their mark to go, then takes the value of that location_index and adds it to the player's
-    # spots_taken attribute, then places the players @marker at the given location_index and calls changes current_turn with switch_turns
+    # asks the user where they want their mark to go, then takes the value of that location_index and adds it to the
+    # player's spots_taken attribute, then places the player's @marker at the given location_index and changes
+    # current_turn with switch_turns
     puts "It is #{@current_turn.name}'s turn, where would you like your #{@current_turn.marker} to go? (Integer 1 - 9)"
     location_index = gets.chomp.to_i - 1
     if location_index > -1 && location_index < 9
@@ -52,6 +68,7 @@ class Game
       random_location_index = rand(9)
       make_move(random_location_index)
     end
+    win_test(@current_turn.spots_taken)
   end
 end
 
@@ -63,12 +80,13 @@ class Player
 
   def initialize
     @spots_taken = []
+    @winner = false
     puts 'Please Enter Your Name'
     @name = gets.chomp
     if @@taken.nil?
       puts 'Please Enter X or O for your marker'
       temp = gets.chomp.downcase
-      if temp == 'x' || temp == 'o'
+      if ['x', 'o'].include?(temp)
         @marker = temp
       else
         puts 'You chose poorly so now you are O'
@@ -86,8 +104,9 @@ class Player
   end
 end
 
-# Single command should get the game started by creating two instances of player, and creating an instance of game with those players
-# it should call take_turn 9 times, checking for a winner after each turn.  If a winner is not determined after 9 turns, the game is a tie
+# Single command should get the game started by creating two instances of player, and creating an instance of game with
+# those players it should call take_turn 9 times, checking for a winner after each turn.  If a winner is not determined
+# after 9 turns, the game is a tie
 class Play
   def initialize
     @@turn_counter = 0
@@ -95,27 +114,21 @@ class Play
     p2 = Player.new
     new_game = Game.new(p1, p2)
 
-    while @@turn_counter < 9
+    while @@turn_counter < 9 && new_game.game_won == false
       new_game.display
       new_game.take_turn
       new_game.switch_turns
       @@turn_counter += 1
     end
-    if @@turn_counter == 9
+
+    if new_game.game_won == true
+      puts "THE WINNER IS #{new_game.current_turn.name}"
+    elsif @@turn_counter == 9
       puts "IT WAS A TIE, YOU'RE BOTH SUCKERS"
     end
   end
 end
 
-win_sets = [
-  [1, 2, 3],
-  [4, 5, 6],
-  [7, 8, 9],
-  [1, 4, 7],
-  [2, 5, 8],
-  [3, 6, 9],
-  [1, 5, 9],
-  [3, 5, 7]
-]
+Play.new
 
-idk = Play.new
+# make reset function
