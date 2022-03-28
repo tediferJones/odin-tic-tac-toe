@@ -23,6 +23,7 @@ class Game
   end
 
   def display
+    puts "\n"
     @board.each_index do |index|
       if [2, 5].include?(index)
         print " #{@board[index]} \n-----------\n"
@@ -49,8 +50,8 @@ class Game
       @board[location_index] = @current_turn.marker
     else
       # find a way to call take_turn recursively so it doesnt run up the turn_counter of Class Play
-      display
-      puts "Sorry #{@current_turn.name} that spot is already taken, try again\n"
+      # display
+      puts "\nSorry #{@current_turn.name} that spot is already taken, try again\n"
       take_turn # calls take_turn recursively to prevent turn_counter in Class Play from incrementing based on an incorrect move
     end
   end
@@ -59,13 +60,13 @@ class Game
     # asks the user where they want their mark to go, then takes the value of that location_index and adds it to the
     # player's spots_taken attribute, then places the player's @marker at the given location_index and changes
     # current_turn with switch_turns
-    puts "It is #{@current_turn.name}'s turn, where would you like your #{@current_turn.marker} to go? (Integer 1 - 9)"
+    puts "\nIt is #{@current_turn.name}'s turn, where would you like your #{@current_turn.marker} to go? (Integer 1 - 9)"
     location_index = gets.chomp.to_i - 1
     if location_index > -1 && location_index < 9
       make_move(location_index)
     else
       useable_locations = []
-      puts "You chose poorly so we'll choose for you\n\n"
+      puts "You chose poorly so we'll choose for you\n"
       @board.each { |location_value| useable_locations << location_value if location_value.is_a? Integer }
       make_move(useable_locations.sample - 1)
     end
@@ -75,76 +76,69 @@ end
 
 # Creates a player with attribute name, marker, and spots_taken
 class Player
-  attr_reader :name, :marker, :spots_taken
+  attr_reader :name, :marker
+  attr_accessor :spots_taken
 
   @@taken = nil
 
   def initialize
     @spots_taken = []
-    @winner = false
     puts 'Please Enter Your Name'
     @name = gets.chomp.capitalize
+
     if @@taken.nil?
       puts 'Please Enter X or O for your marker'
-      temp = gets.chomp.downcase
-      if ['x', 'o'].include?(temp)
+      temp = gets.chomp.upcase
+      if ['X', 'O'].include?(temp)
         @marker = temp
       else
         puts 'You chose poorly so now you are O'
-        @marker = 'o'
+        @marker = 'O'
       end
     else
       puts 'Since one of the markers is already taken we will chose for you'
-      if @@taken == 'x'
-        @marker = 'o'
-      elsif @@taken == 'o'
-        @marker = 'x'
+      if @@taken == 'X'
+        @marker = 'O'
+      elsif @@taken == 'O'
+        @marker = 'X'
       end
     end
     @@taken = @marker
-  end
-
-  def set_marker
-
+    puts "Hi #{@name}, you mark is #{@marker}"
   end
 end
 
-# Single command should get the game started by creating two instances of player, and creating an instance of game with
-# those players it should call take_turn 9 times, checking for a winner after each turn.  If a winner is not determined
-# after 9 turns, the game is a tie
-class Play
-  def initialize
-    @@turn_counter = 0
-    p1 = Player.new
-    p2 = Player.new
-    new_game = Game.new(p1, p2)
+def play001(player1, player2)
+  start_game(player1, player2)
 
-    while @@turn_counter < 9 && new_game.game_won == false
-      new_game.display
-      new_game.take_turn
-      new_game.switch_turns
-      @@turn_counter += 1
-      #play_turn
-    end
-
-    if new_game.game_won == true
-      new_game.switch_turns
-      new_game.display
-      puts "THE WINNER IS #{new_game.current_turn.name.upcase}"
-    elsif @@turn_counter == 9
-      puts "IT WAS A TIE, YOU'RE BOTH SUCKERS"
-    end
-    # Try adding replay function down here, make it call initialize again
+  puts "\nWould you like a rematch? Enter Y to continue"
+  if gets.chomp.upcase == 'Y'
+    player1.spots_taken = []
+    player2.spots_taken = []
+    play001(player1, player2)
   end
+end
 
-  def play_turn
+def start_game(player1, player2)
+  turn_counter = 0
+  new_game = Game.new(player1, player2)
+
+  while turn_counter < 9 && new_game.game_won == false
     new_game.display
     new_game.take_turn
     new_game.switch_turns
-    @@turn_counter += 1
+    turn_counter += 1
+  end
+
+  if new_game.game_won == true
+    new_game.switch_turns
+    new_game.display
+    puts "\nTHE WINNER IS #{new_game.current_turn.name.upcase}\n"
+  elsif turn_counter == 9
+    puts "\nIT WAS A TIE, YOU'RE BOTH SUCKERS\n"
   end
 end
 
-Play.new
-
-# make reset function
+first_player = Player.new
+second_player = Player.new
+play001(first_player, second_player)
