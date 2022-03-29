@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 
 # This is the game class
 class Game
@@ -6,7 +7,8 @@ class Game
   def initialize(player1, player2)
     @player1 = player1
     @player2 = player2
-    @current_turn = @player1
+    @current_turn = [@player1, @player2].sample
+    puts "\n#{@current_turn.name} gets to go first!"
     @board = (1..9).to_a
     @game_won = false
   end
@@ -49,8 +51,6 @@ class Game
       @current_turn.spots_taken << @board[location_index]
       @board[location_index] = @current_turn.marker
     else
-      # find a way to call take_turn recursively so it doesnt run up the turn_counter of Class Play
-      # display
       puts "\nSorry #{@current_turn.name} that spot is already taken, try again\n"
       take_turn # calls take_turn recursively to prevent turn_counter in Class Play from incrementing based on an incorrect move
     end
@@ -89,7 +89,7 @@ class Player
     if @@taken.nil?
       puts 'Please Enter X or O for your marker'
       temp = gets.chomp.upcase
-      if ['X', 'O'].include?(temp)
+      if %w[X O].include?(temp)
         @marker = temp
       else
         puts 'You chose poorly so now you are O'
@@ -97,9 +97,10 @@ class Player
       end
     else
       puts 'Since one of the markers is already taken we will chose for you'
-      if @@taken == 'X'
+      case @@taken
+      when 'X'
         @marker = 'O'
-      elsif @@taken == 'O'
+      when 'O'
         @marker = 'X'
       end
     end
@@ -108,18 +109,7 @@ class Player
   end
 end
 
-def play001(player1, player2)
-  start_game(player1, player2)
-
-  puts "\nWould you like a rematch? Enter Y to continue"
-  if gets.chomp.upcase == 'Y'
-    player1.spots_taken = []
-    player2.spots_taken = []
-    play001(player1, player2)
-  end
-end
-
-def start_game(player1, player2)
+def play(player1, player2)
   turn_counter = 0
   new_game = Game.new(player1, player2)
 
@@ -137,8 +127,15 @@ def start_game(player1, player2)
   elsif turn_counter == 9
     puts "\nIT WAS A TIE, YOU'RE BOTH SUCKERS\n"
   end
+
+  puts "\nWould you like a rematch? Press ENTER to continue, or type EXIT and press Enter to quit the program"
+  return unless gets == "\n"
+
+  player1.spots_taken = []
+  player2.spots_taken = []
+  play(player1, player2)
 end
 
 first_player = Player.new
 second_player = Player.new
-play001(first_player, second_player)
+play(first_player, second_player)
